@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-list"
+description = "Enables the extensions_list command without any pre-configured scope."
+commands.allow = ["extensions_list"]
+
+[[permission]]
+identifier = "deny-extensions-list"
+description = "Denies the extensions_list command without any pre-configured scope."
+commands.deny = ["extensions_list"]

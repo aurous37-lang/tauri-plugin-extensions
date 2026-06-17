@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Noop MV3 (spike fixture)",
+  "version": "0.1.0",
+  "description": "Minimal MV3 extension that exercises every plugin subsystem: content-script injection, chrome.runtime round-trip, chrome.storage.local persistence.",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "world": "ISOLATED",
+      "all_frames": false
+    }
+  ],
+  "permissions": ["storage"],
+  "host_permissions": [],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}

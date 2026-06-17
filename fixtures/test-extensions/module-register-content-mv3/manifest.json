@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Module-Register-Content MV3 (BG-host fixture)",
+  "version": "0.1.0",
+  "description": "ES-module background service worker that, after a top-level import, calls chrome.scripting.registerContentScripts to inject a MAIN-world inpage script — the exact shape Phantom's EVM provider uses. Proves module-SW execution and post-import dynamic content-script registration compose.",
+  "background": {
+    "service_worker": "sw.js",
+    "type": "module"
+  },
+  "permissions": ["scripting"],
+  "host_permissions": ["http://*/*", "https://*/*"]
+}

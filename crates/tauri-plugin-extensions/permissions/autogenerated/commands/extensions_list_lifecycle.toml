@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-list-lifecycle"
+description = "Enables the extensions_list_lifecycle command without any pre-configured scope."
+commands.allow = ["extensions_list_lifecycle"]
+
+[[permission]]
+identifier = "deny-extensions-list-lifecycle"
+description = "Denies the extensions_list_lifecycle command without any pre-configured scope."
+commands.deny = ["extensions_list_lifecycle"]

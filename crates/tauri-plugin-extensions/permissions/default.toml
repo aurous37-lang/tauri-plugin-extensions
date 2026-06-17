@@ -1,0 +1,37 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = """
+Default permission set for tauri-plugin-extensions. Grants access to every
+command the plugin exposes — lifecycle, runtime, and storage surfaces.
+
+Consumers that want a tighter allowlist should reference individual
+`allow-extensions-<command>` permissions instead of `default` in their
+capability file.
+"""
+permissions = [
+  # Lifecycle surface
+  "allow-extensions-load-unpacked",
+  "allow-extensions-unload",
+  "allow-extensions-list",
+  "allow-extensions-list-lifecycle",
+  "allow-extensions-reload",
+  "allow-extensions-enable",
+  "allow-extensions-disable",
+  "allow-extensions-reconcile-orphans",
+  "allow-extensions-diagnostics",
+  # Runtime
+  "allow-extensions-content-ready",
+  "allow-extensions-scripting-register-content-scripts",
+  "allow-extensions-scripting-unregister-content-scripts",
+  "allow-extensions-scripting-get-registered-content-scripts",
+  "allow-extensions-runtime-send-message",
+  "allow-extensions-runtime-connect",
+  "allow-extensions-runtime-port-post",
+  "allow-extensions-runtime-port-disconnect",
+  # Storage
+  "allow-extensions-storage-get",
+  "allow-extensions-storage-set",
+  "allow-extensions-storage-remove",
+  "allow-extensions-storage-clear",
+]

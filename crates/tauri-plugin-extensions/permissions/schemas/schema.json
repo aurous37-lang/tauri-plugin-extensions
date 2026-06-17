@@ -1,0 +1,558 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PermissionFile",
+  "description": "Permission file that can define a default permission, a set of permissions or a list of inlined permissions.",
+  "type": "object",
+  "properties": {
+    "default": {
+      "description": "The default permission set for the plugin",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DefaultPermission"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "set": {
+      "description": "A list of permissions sets defined",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionSet"
+      }
+    },
+    "permission": {
+      "description": "A list of inlined permissions",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Permission"
+      }
+    }
+  },
+  "definitions": {
+    "DefaultPermission": {
+      "description": "The default permission set of the plugin.\n\nWorks similarly to a permission with the \"default\" identifier.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PermissionSet": {
+      "description": "A set of direct permissions grouped together under a new name.",
+      "type": "object",
+      "required": [
+        "description",
+        "identifier",
+        "permissions"
+      ],
+      "properties": {
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does.",
+          "type": "string"
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionKind"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "description": "Descriptions of explicit privileges of commands.\n\nIt can enable commands to be accessible in the frontend of the application.\n\nIf the scope is defined it can be used to fine grain control the access of individual or multiple commands.",
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commands": {
+          "description": "Allowed or denied commands when using this permission.",
+          "default": {
+            "allow": [],
+            "deny": []
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Commands"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Allowed or denied scoped when using this permission.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Scopes"
+            }
+          ]
+        },
+        "platforms": {
+          "description": "Target platforms this permission applies. By default all platforms are affected by this permission.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Target"
+          }
+        }
+      }
+    },
+    "Commands": {
+      "description": "Allowed and denied commands inside a permission.\n\nIf two commands clash inside of `allow` and `deny`, it should be denied by default.",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allowed command.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "description": "Denied command, which takes priority.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Scopes": {
+      "description": "An argument for fine grained behavior control of Tauri commands.\n\nIt can be of any serde serializable type and is used to allow or prevent certain actions inside a Tauri command. The configured scope is passed to the command and will be enforced by the command implementation.\n\n## Example\n\n```json { \"allow\": [{ \"path\": \"$HOME/**\" }], \"deny\": [{ \"path\": \"$HOME/secret.txt\" }] } ```",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Data that defines what is allowed by the scope.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        "deny": {
+          "description": "Data that defines what is denied by the scope. This should be prioritized by validation logic.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      }
+    },
+    "Value": {
+      "description": "All supported ACL values.",
+      "anyOf": [
+        {
+          "description": "Represents a null JSON value.",
+          "type": "null"
+        },
+        {
+          "description": "Represents a [`bool`].",
+          "type": "boolean"
+        },
+        {
+          "description": "Represents a valid ACL [`Number`].",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Number"
+            }
+          ]
+        },
+        {
+          "description": "Represents a [`String`].",
+          "type": "string"
+        },
+        {
+          "description": "Represents a list of other [`Value`]s.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "description": "Represents a map of [`String`] keys to [`Value`]s.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "Number": {
+      "description": "A valid ACL number.",
+      "anyOf": [
+        {
+          "description": "Represents an [`i64`].",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "description": "Represents a [`f64`].",
+          "type": "number",
+          "format": "double"
+        }
+      ]
+    },
+    "Target": {
+      "description": "Platform target.",
+      "oneOf": [
+        {
+          "description": "MacOS.",
+          "type": "string",
+          "enum": [
+            "macOS"
+          ]
+        },
+        {
+          "description": "Windows.",
+          "type": "string",
+          "enum": [
+            "windows"
+          ]
+        },
+        {
+          "description": "Linux.",
+          "type": "string",
+          "enum": [
+            "linux"
+          ]
+        },
+        {
+          "description": "Android.",
+          "type": "string",
+          "enum": [
+            "android"
+          ]
+        },
+        {
+          "description": "iOS.",
+          "type": "string",
+          "enum": [
+            "iOS"
+          ]
+        }
+      ]
+    },
+    "PermissionKind": {
+      "type": "string",
+      "oneOf": [
+        {
+          "description": "Enables the extensions_content_ready command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-content-ready",
+          "markdownDescription": "Enables the extensions_content_ready command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_content_ready command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-content-ready",
+          "markdownDescription": "Denies the extensions_content_ready command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_diagnostics command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-diagnostics",
+          "markdownDescription": "Enables the extensions_diagnostics command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_diagnostics command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-diagnostics",
+          "markdownDescription": "Denies the extensions_diagnostics command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_disable command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-disable",
+          "markdownDescription": "Enables the extensions_disable command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_disable command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-disable",
+          "markdownDescription": "Denies the extensions_disable command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_enable command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-enable",
+          "markdownDescription": "Enables the extensions_enable command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_enable command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-enable",
+          "markdownDescription": "Denies the extensions_enable command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-list",
+          "markdownDescription": "Enables the extensions_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-list",
+          "markdownDescription": "Denies the extensions_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_list_lifecycle command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-list-lifecycle",
+          "markdownDescription": "Enables the extensions_list_lifecycle command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_list_lifecycle command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-list-lifecycle",
+          "markdownDescription": "Denies the extensions_list_lifecycle command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_load_unpacked command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-load-unpacked",
+          "markdownDescription": "Enables the extensions_load_unpacked command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_load_unpacked command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-load-unpacked",
+          "markdownDescription": "Denies the extensions_load_unpacked command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_reconcile_orphans command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-reconcile-orphans",
+          "markdownDescription": "Enables the extensions_reconcile_orphans command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_reconcile_orphans command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-reconcile-orphans",
+          "markdownDescription": "Denies the extensions_reconcile_orphans command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_reload command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-reload",
+          "markdownDescription": "Enables the extensions_reload command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_reload command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-reload",
+          "markdownDescription": "Denies the extensions_reload command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_runtime_connect command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-runtime-connect",
+          "markdownDescription": "Enables the extensions_runtime_connect command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_runtime_connect command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-runtime-connect",
+          "markdownDescription": "Denies the extensions_runtime_connect command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_runtime_port_disconnect command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-runtime-port-disconnect",
+          "markdownDescription": "Enables the extensions_runtime_port_disconnect command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_runtime_port_disconnect command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-runtime-port-disconnect",
+          "markdownDescription": "Denies the extensions_runtime_port_disconnect command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_runtime_port_post command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-runtime-port-post",
+          "markdownDescription": "Enables the extensions_runtime_port_post command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_runtime_port_post command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-runtime-port-post",
+          "markdownDescription": "Denies the extensions_runtime_port_post command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_runtime_send_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-runtime-send-message",
+          "markdownDescription": "Enables the extensions_runtime_send_message command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_runtime_send_message command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-runtime-send-message",
+          "markdownDescription": "Denies the extensions_runtime_send_message command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_scripting_get_registered_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-scripting-get-registered-content-scripts",
+          "markdownDescription": "Enables the extensions_scripting_get_registered_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_scripting_get_registered_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-scripting-get-registered-content-scripts",
+          "markdownDescription": "Denies the extensions_scripting_get_registered_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_scripting_register_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-scripting-register-content-scripts",
+          "markdownDescription": "Enables the extensions_scripting_register_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_scripting_register_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-scripting-register-content-scripts",
+          "markdownDescription": "Denies the extensions_scripting_register_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_scripting_unregister_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-scripting-unregister-content-scripts",
+          "markdownDescription": "Enables the extensions_scripting_unregister_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_scripting_unregister_content_scripts command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-scripting-unregister-content-scripts",
+          "markdownDescription": "Denies the extensions_scripting_unregister_content_scripts command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_storage_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-storage-clear",
+          "markdownDescription": "Enables the extensions_storage_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_storage_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-storage-clear",
+          "markdownDescription": "Denies the extensions_storage_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_storage_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-storage-get",
+          "markdownDescription": "Enables the extensions_storage_get command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_storage_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-storage-get",
+          "markdownDescription": "Denies the extensions_storage_get command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_storage_remove command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-storage-remove",
+          "markdownDescription": "Enables the extensions_storage_remove command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_storage_remove command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-storage-remove",
+          "markdownDescription": "Denies the extensions_storage_remove command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_storage_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-storage-set",
+          "markdownDescription": "Enables the extensions_storage_set command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_storage_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-storage-set",
+          "markdownDescription": "Denies the extensions_storage_set command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the extensions_unload command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-extensions-unload",
+          "markdownDescription": "Enables the extensions_unload command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the extensions_unload command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-extensions-unload",
+          "markdownDescription": "Denies the extensions_unload command without any pre-configured scope."
+        },
+        {
+          "description": "Default permission set for tauri-plugin-extensions. Grants access to every\ncommand the plugin exposes — lifecycle, runtime, and storage surfaces.\n\nConsumers that want a tighter allowlist should reference individual\n`allow-extensions-<command>` permissions instead of `default` in their\ncapability file.\n\n#### This default permission set includes:\n\n- `allow-extensions-load-unpacked`\n- `allow-extensions-unload`\n- `allow-extensions-list`\n- `allow-extensions-list-lifecycle`\n- `allow-extensions-reload`\n- `allow-extensions-enable`\n- `allow-extensions-disable`\n- `allow-extensions-reconcile-orphans`\n- `allow-extensions-diagnostics`\n- `allow-extensions-content-ready`\n- `allow-extensions-scripting-register-content-scripts`\n- `allow-extensions-scripting-unregister-content-scripts`\n- `allow-extensions-scripting-get-registered-content-scripts`\n- `allow-extensions-runtime-send-message`\n- `allow-extensions-runtime-connect`\n- `allow-extensions-runtime-port-post`\n- `allow-extensions-runtime-port-disconnect`\n- `allow-extensions-storage-get`\n- `allow-extensions-storage-set`\n- `allow-extensions-storage-remove`\n- `allow-extensions-storage-clear`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Default permission set for tauri-plugin-extensions. Grants access to every\ncommand the plugin exposes — lifecycle, runtime, and storage surfaces.\n\nConsumers that want a tighter allowlist should reference individual\n`allow-extensions-<command>` permissions instead of `default` in their\ncapability file.\n\n#### This default permission set includes:\n\n- `allow-extensions-load-unpacked`\n- `allow-extensions-unload`\n- `allow-extensions-list`\n- `allow-extensions-list-lifecycle`\n- `allow-extensions-reload`\n- `allow-extensions-enable`\n- `allow-extensions-disable`\n- `allow-extensions-reconcile-orphans`\n- `allow-extensions-diagnostics`\n- `allow-extensions-content-ready`\n- `allow-extensions-scripting-register-content-scripts`\n- `allow-extensions-scripting-unregister-content-scripts`\n- `allow-extensions-scripting-get-registered-content-scripts`\n- `allow-extensions-runtime-send-message`\n- `allow-extensions-runtime-connect`\n- `allow-extensions-runtime-port-post`\n- `allow-extensions-runtime-port-disconnect`\n- `allow-extensions-storage-get`\n- `allow-extensions-storage-set`\n- `allow-extensions-storage-remove`\n- `allow-extensions-storage-clear`"
+        }
+      ]
+    }
+  }
+}

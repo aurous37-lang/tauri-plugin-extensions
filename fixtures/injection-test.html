@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>injection test</title>
+  </head>
+  <body>
+    <h1>injection test</h1>
+    <div id="probe">not injected</div>
+    <script>
+      // Content scripts post a `message` with `{ from: 'content-script', text }`
+      // to signal successful injection. This page surfaces it visibly so a
+      // manual tester can eyeball the probe's text.
+      window.addEventListener('message', (e) => {
+        if (e.data?.from === 'content-script') {
+          const probe = document.getElementById('probe');
+          if (probe) probe.textContent = 'injected: ' + e.data.text;
+        }
+      });
+    </script>
+    <!--
+      Manual exercise (Windows-only, per D-003):
+        1. Build the minimal-host example (examples/minimal-host) so the
+           plugin is wired into a real Tauri app.
+        2. Launch it: `cargo run -p minimal-host` (or the pnpm wrapper if
+           Agent I has added one).
+        3. Load an unpacked extension whose manifest's content_scripts[]
+           contains a `<all_urls>` (or `file://*`) match pattern and a
+           content.js that does:
+             window.postMessage({ from: 'content-script', text: 'hello' }, '*');
+        4. In the main webview's address bar (or via the host's nav UI),
+           navigate to:
+             file:///C:/Users/.../MV3/fixtures/injection-test.html
+        5. The `#probe` div should read `injected: hello`.
+
+      If it still says `not injected`:
+        - DevTools console: look for `[chrome-shim:content] configured ext=…`
+          — if absent, the bootstrap never ran; check that the URL actually
+          matched the extension's `content_scripts[].matches`.
+        - `tracing` output from the Rust side: `"injecting content scripts"`
+          at DEBUG confirms the registry resolved the URL and queued evals.
+    -->
+  </body>
+</html>

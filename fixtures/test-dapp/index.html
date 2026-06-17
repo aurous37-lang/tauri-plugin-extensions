@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MV3 Test Dapp (EVM + Solana canary)</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #101217;
+      color: #e6e9ef;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    header { padding: 20px 24px 8px; border-bottom: 1px solid #242832; }
+    header h1 { margin: 0 0 4px; font-size: 18px; }
+    header .sub { margin: 0; color: #8892a6; font-size: 12px; }
+    main { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; max-width: 900px; }
+    .panel {
+      background: #171a21;
+      border: 1px solid #242832;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8892a6;
+    }
+    pre {
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      background: #0b0d11;
+      border: 1px solid #242832;
+      border-radius: 4px;
+      padding: 10px;
+      max-height: 320px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #8892a6; }
+    .status.ok { color: #61d095; }
+    .status.warn { color: #f4b860; }
+    .status.err { color: #f27272; }
+  </style>
+</head>
+<body>
+  <!-- Static parse-time beacon: fires with ZERO JavaScript, during HTML parse.
+       Distinguishes "page JS thread hung by a content script" (img fires,
+       script beacons don't) from "page never parses at all" (nothing fires).
+       Payload is b64url of {"staticImg":true}. -->
+  <img src="https://mv3report.localhost/eyJzdGF0aWNJbWciOnRydWV9?static=1" alt="" width="1" height="1" style="position:absolute;left:-9999px" />
+  <header>
+    <h1>MV3 Test Dapp</h1>
+    <p class="sub">Canary page. Probes for injected EVM (EIP-1193 / EIP-6963) and Solana wallet providers and reports what it finds.</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Probe status</h2>
+      <div id="status" class="status">polling...</div>
+    </section>
+
+    <section class="panel">
+      <h2>Globals found</h2>
+      <pre id="probe">{}</pre>
+    </section>
+
+    <section class="panel">
+      <h2>Tauri IPC record</h2>
+      <pre id="record">(pending)</pre>
+    </section>
+  </main>
+
+  <script>
+    // --------------------------------------------------------------
+    // Wallet-injection probe — EVM (EIP-1193 + EIP-6963) and Solana.
+    //
+    // The page is wallet-agnostic. It records which provider globals appear,
+    // which EIP-6963 providers announce themselves (the standard modern
+    // wallets multi-inject through), and attempts a live `eth_chainId` round
+    // trip through whichever EIP-1193 provider lands on `window.ethereum`.
+    //
+    // Provider injection timing inside the plugin depends on
+    // runtime::injection (content scripts) and, for wallets that register
+    // their inpage script dynamically (Phantom EVM), on the background
+    // service worker reaching chrome.scripting.registerContentScripts. We
+    // poll for up to 6 s so a late injection still registers.
+    // --------------------------------------------------------------
+
+    const statusEl = document.getElementById("status");
+    const probeEl = document.getElementById("probe");
+    const recordEl = document.getElementById("record");
+
+    // EIP-6963: accumulate every provider that announces itself. Set up the
+    // listener BEFORE dispatching the request so we don't miss synchronous
+    // re-announcements. Wallets also announce unprompted at injection time.
+    const eip6963 = [];
+    const eip6963Seen = new Set();
+    window.addEventListener("eip6963:announceProvider", (event) => {
+      const detail = /** @type {any} */ (event).detail;
+      const info = detail && detail.info ? detail.info : {};
+      const key = info.uuid || info.rdns || info.name || JSON.stringify(info);
+      if (eip6963Seen.has(key)) return;
+      eip6963Seen.add(key);
+      eip6963.push({
+        rdns: info.rdns ?? null,
+        name: info.name ?? null,
+        hasProvider: !!(detail && detail.provider),
+      });
+      // Mirror onto window so the Rust-side document.title readback (which
+      // bypasses Tauri IPC for SES-hardened pages) can see EIP-6963 too.
+      /** @type {any} */ (window).__eip6963Count = eip6963.length;
+      /** @type {any} */ (window).__eip6963Rdns = eip6963.map((p) => p.rdns).filter(Boolean);
+    });
+    function requestEip6963() {
+      try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) { /* ignore */ }
+    }
+    requestEip6963();
+
+    // eth_chainId round trip — attempted once, the first time an EIP-1193
+    // provider is visible. Result is stashed and surfaced in the snapshot.
+    let chainIdAttempted = false;
+    let chainIdResult = null; // { ok, value? , error? }
+    async function tryChainId(provider) {
+      if (chainIdAttempted || !provider || typeof provider.request !== "function") return;
+      chainIdAttempted = true;
+      try {
+        const withTimeout = Promise.race([
+          provider.request({ method: "eth_chainId" }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("eth_chainId timed out after 4s")), 4000)),
+        ]);
+        const value = await withTimeout;
+        chainIdResult = { ok: true, value };
+      } catch (e) {
+        chainIdResult = { ok: false, error: e && e.message ? e.message : String(e) };
+      }
+    }
+
+    function snapshot() {
+      const phantom = /** @type {any} */ (window).phantom;
+      const ethereum = /** @type {any} */ (window).ethereum;
+      const solana = /** @type {any} */ (window).solana;
+      const rabby = /** @type {any} */ (window).rabby;
+      return {
+        // EIP-1193 provider on window.ethereum + wallet-identity flags.
+        ethereum: !!ethereum,
+        ethereumIsMetaMask: !!(ethereum && ethereum.isMetaMask),
+        ethereumIsRabby: !!(ethereum && ethereum.isRabby),
+        ethereumIsPhantom: !!(ethereum && ethereum.isPhantom),
+        rabbyGlobal: !!rabby,
+        // Phantom multichain surface.
+        phantomPresent: !!phantom,
+        phantomSolana: !!(phantom && phantom.solana),
+        phantomEthereum: !!(phantom && phantom.ethereum),
+        solana: !!solana,
+        isPhantom: !!((ethereum && ethereum.isPhantom) || (solana && solana.isPhantom)),
+        solanaIsPhantom: !!(solana && solana.isPhantom),
+        phantomSolanaIsPhantom: !!(phantom && phantom.solana && phantom.solana.isPhantom),
+        phantomKeys: phantom ? Object.keys(phantom) : [],
+        // EIP-6963 announced providers (the wallet-agnostic multi-provider
+        // detector — each wallet announces its own provider + rdns).
+        eip6963Count: eip6963.length,
+        eip6963Rdns: eip6963.map((p) => p.rdns).filter(Boolean),
+        eip6963Providers: eip6963.slice(),
+        // Live round trip through window.ethereum.request (null until tried).
+        chainId: chainIdResult,
+        // noop-mv3 content→BG round-trip pong (single-world caveat: null on
+        // pages already occupied by another extension's content identity).
+        noopPong: /** @type {any} */ (window).__NOOP_MV3_PONG__ ?? null,
+        noopError: /** @type {any} */ (window).__NOOP_MV3_ERROR__ ?? null,
+      };
+    }
+
+    function render(snap) {
+      probeEl.textContent = JSON.stringify(snap, null, 2);
+    }
+
+    // SES-surviving readback: beacon the snapshot to the host's mv3report://
+    // scheme as URL-safe base64 in an Image GET. On pages where a wallet's
+    // lockdown() kills Tauri IPC AND host-side eval (MetaMask), this is the
+    // only channel left — network ops are not frozen by SES. Repeats so the
+    // host can clear-then-read without racing the page.
+    let beaconSeq = 0;
+    function publishBeacon(snap) {
+      try {
+        const body = Object.assign({ dappIntrospect: true, pageBeacon: true }, snap, {
+          pageErrors: (/** @type {any} */ (window).__extPageErrors || []).slice(0, 8),
+        });
+        const b64 = btoa(JSON.stringify(body))
+          .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        new Image().src = "https://mv3report.localhost/" + b64 + "?s=" + (++beaconSeq);
+      } catch (e) { /* never let the beacon break the probe */ }
+    }
+
+    function anyTrue(snap) {
+      return snap.phantomPresent
+        || snap.phantomSolana
+        || snap.phantomEthereum
+        || snap.ethereum
+        || snap.solana
+        || snap.eip6963Count > 0;
+    }
+
+    async function recordToHost(snap) {
+      const internals = /** @type {any} */ (window).__TAURI_INTERNALS__;
+      if (!internals || typeof internals.invoke !== "function") {
+        recordEl.textContent = "Tauri IPC unavailable (not running inside Tauri webview).";
+        return;
+      }
+      try {
+        await internals.invoke("minimal_host_record_probe", { probe: snap });
+        recordEl.textContent = "recorded -> minimal_host_record_probe ok";
+      } catch (e) {
+        recordEl.textContent = "record failed: " + (e && e.message ? e.message : String(e));
+      }
+    }
+
+    const deadline = Date.now() + 6000;
+    function safeSnapshot() {
+      // A wallet's MAIN-world inpage provider can install throwing getters on
+      // window.ethereum; never let that strand the poll loop or the report.
+      try { return snapshot(); } catch (e) {
+        return { probeError: e && e.message ? e.message : String(e) };
+      }
+    }
+    let finalSnap = safeSnapshot();
+    render(finalSnap);
+    publishBeacon(finalSnap);
+    statusEl.textContent = "polling for wallet providers...";
+
+    const iv = setInterval(async () => {
+      try {
+        // Re-request EIP-6963 periodically — a late-injected provider
+        // re-announces when asked.
+        requestEip6963();
+        const eth = /** @type {any} */ (window).ethereum;
+        if (eth) await tryChainId(eth);
+        finalSnap = safeSnapshot();
+        render(finalSnap);
+      } catch (e) {
+        finalSnap = { probeError: e && e.message ? e.message : String(e) };
+      }
+      // Early-exit once a provider is present AND (the chainId round trip has
+      // resolved OR there's no EIP-1193 provider to round-trip through).
+      const settled = !finalSnap.ethereum || finalSnap.chainId !== null;
+      if ((anyTrue(finalSnap) && settled) || Date.now() > deadline) {
+        clearInterval(iv);
+        /** @type {any} */ (window).__dappProbeResult = finalSnap;
+        if (anyTrue(finalSnap)) {
+          statusEl.textContent = "wallet providers detected";
+          statusEl.className = "status ok";
+        } else {
+          statusEl.textContent = "no wallet providers after 6s timeout";
+          statusEl.className = "status warn";
+        }
+        recordToHost(finalSnap);
+        publishBeacon(finalSnap);
+        // Keep re-publishing the settled snapshot — the host's introspect
+        // clears its slot when it starts, so a one-shot beacon could be lost.
+        let rebeats = 0;
+        const slowIv = setInterval(() => {
+          publishBeacon(finalSnap);
+          if (++rebeats >= 40) clearInterval(slowIv); // ~60s of coverage
+        }, 1500);
+      }
+    }, 100);
+  </script>
+</body>
+</html>

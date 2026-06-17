@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-scripting-get-registered-content-scripts"
+description = "Enables the extensions_scripting_get_registered_content_scripts command without any pre-configured scope."
+commands.allow = ["extensions_scripting_get_registered_content_scripts"]
+
+[[permission]]
+identifier = "deny-extensions-scripting-get-registered-content-scripts"
+description = "Denies the extensions_scripting_get_registered_content_scripts command without any pre-configured scope."
+commands.deny = ["extensions_scripting_get_registered_content_scripts"]

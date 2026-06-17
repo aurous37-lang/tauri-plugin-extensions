@@ -1,0 +1,42 @@
+[package]
+name = "mv3-minimal-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "PolyForm-Noncommercial-1.0.0"
+description = "Minimal Tauri v2 host app that loads tauri-plugin-extensions."
+publish = false
+
+# Mark this crate as an isolated workspace root so the repo-level
+# `cargo check --workspace` (rooted at /Cargo.toml) does NOT pull the full
+# Tauri build graph into every check. The repo-level workspace also lists
+# this directory under `exclude`.
+[workspace]
+
+[lib]
+name = "mv3_minimal_host_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Plugin under test — depended on via path so edits to the plugin crate are
+# picked up on the next `cargo build`.
+tauri-plugin-extensions = { path = "../../../crates/tauri-plugin-extensions" }
+
+tauri = { version = "2", features = [] }
+
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time", "fs"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

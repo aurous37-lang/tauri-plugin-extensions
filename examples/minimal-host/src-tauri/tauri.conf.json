@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MV3 Minimal Host",
+  "version": "0.1.0",
+  "identifier": "com.aurous37lang.mv3.minimal-host",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "MV3 Minimal Host",
+        "width": 960,
+        "height": 720,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "useHttpsScheme": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-eval' https://extres.localhost; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: https://ipc.localhost https://extres.localhost https://mv3report.localhost https: http: wss: ws:; img-src 'self' data: https: https://mv3report.localhost;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi"],
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Minimal Tauri host for tauri-plugin-extensions",
+    "longDescription": "Smallest host Tauri app that exercises tauri-plugin-extensions by loading the noop-mv3 fixture."
+  }
+}

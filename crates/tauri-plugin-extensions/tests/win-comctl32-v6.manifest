@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Side-by-side manifest embedded into this crate's TEST binaries (see
+  build.rs `cargo:rustc-link-arg-tests`). tao imports
+  comctl32.dll!TaskDialogIndirect, which only exists in Common-Controls
+  v6 — without this manifest the Windows loader binds comctl32 v5 and the
+  test process dies at load time with STATUS_ENTRYPOINT_NOT_FOUND
+  (0xc0000139) before main ever runs. tauri-build embeds the equivalent
+  manifest into real app binaries; test harness binaries don't get one by
+  default.
+-->
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"
+      />
+    </dependentAssembly>
+  </dependency>
+</assembly>

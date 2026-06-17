@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-storage-get"
+description = "Enables the extensions_storage_get command without any pre-configured scope."
+commands.allow = ["extensions_storage_get"]
+
+[[permission]]
+identifier = "deny-extensions-storage-get"
+description = "Denies the extensions_storage_get command without any pre-configured scope."
+commands.deny = ["extensions_storage_get"]

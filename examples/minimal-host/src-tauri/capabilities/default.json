@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions for the MV3 minimal host. Core invoke + event listening; every plugin command is granted via the plugin's default permission set. `ext-bg-*` is in the windows list so the content-bootstrap JS inside each hidden per-extension WebView2 can talk to the plugin's IPC surface without tripping the capability guard.",
+  "windows": ["main", "test-dapp", "ext-bg-*"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:webview:allow-create-webview-window",
+    "extensions:default"
+  ]
+}

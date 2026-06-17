@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-reload"
+description = "Enables the extensions_reload command without any pre-configured scope."
+commands.allow = ["extensions_reload"]
+
+[[permission]]
+identifier = "deny-extensions-reload"
+description = "Denies the extensions_reload command without any pre-configured scope."
+commands.deny = ["extensions_reload"]

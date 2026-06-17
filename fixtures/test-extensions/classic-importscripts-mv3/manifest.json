@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Classic-importScripts MV3 (BG-host fixture)",
+  "version": "0.1.0",
+  "description": "Classic (non-module) background service worker that pulls its real logic in via importScripts() of two sibling files — the mechanism MetaMask and Rabby use. Proves the BG host provides a synchronous importScripts that resolves against the extension root.",
+  "background": {
+    "service_worker": "sw.js",
+    "type": "classic"
+  },
+  "permissions": ["storage"],
+  "host_permissions": []
+}

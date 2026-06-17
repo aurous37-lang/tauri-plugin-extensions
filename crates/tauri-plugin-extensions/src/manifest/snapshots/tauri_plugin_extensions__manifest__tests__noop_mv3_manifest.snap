@@ -1,0 +1,66 @@
+---
+source: src/manifest/mod.rs
+assertion_line: 323
+expression: m
+---
+Manifest {
+    manifest_version: 3,
+    name: "Noop MV3 (spike fixture)",
+    version: Some(
+        "0.1.0",
+    ),
+    short_name: None,
+    description: Some(
+        "Minimal MV3 extension that exercises every plugin subsystem: content-script injection, chrome.runtime round-trip, chrome.storage.local persistence.",
+    ),
+    author: None,
+    homepage_url: None,
+    default_locale: None,
+    icons: {
+        "128": "icon.png",
+        "16": "icon.png",
+        "48": "icon.png",
+    },
+    permissions: [
+        "storage",
+    ],
+    optional_permissions: [],
+    host_permissions: [],
+    content_scripts: [
+        ContentScript {
+            matches: [
+                "<all_urls>",
+            ],
+            exclude_matches: [],
+            include_globs: [],
+            exclude_globs: [],
+            js: [
+                "content.js",
+            ],
+            css: [],
+            run_at: DocumentEnd,
+            world: Isolated,
+            all_frames: false,
+            match_about_blank: false,
+            match_origin_as_fallback: false,
+        },
+    ],
+    background: Some(
+        Background {
+            service_worker: Some(
+                "background.js",
+            ),
+            type: Module,
+            scripts: [],
+        },
+    ),
+    action: None,
+    options_ui: None,
+    options_page: None,
+    web_accessible_resources: [],
+    content_security_policy: None,
+    externally_connectable: None,
+    minimum_chrome_version: None,
+    key: None,
+    extra: {},
+}

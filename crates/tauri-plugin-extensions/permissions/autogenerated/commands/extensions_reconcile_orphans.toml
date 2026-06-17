@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-reconcile-orphans"
+description = "Enables the extensions_reconcile_orphans command without any pre-configured scope."
+commands.allow = ["extensions_reconcile_orphans"]
+
+[[permission]]
+identifier = "deny-extensions-reconcile-orphans"
+description = "Denies the extensions_reconcile_orphans command without any pre-configured scope."
+commands.deny = ["extensions_reconcile_orphans"]

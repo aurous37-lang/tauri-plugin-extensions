@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-storage-clear"
+description = "Enables the extensions_storage_clear command without any pre-configured scope."
+commands.allow = ["extensions_storage_clear"]
+
+[[permission]]
+identifier = "deny-extensions-storage-clear"
+description = "Denies the extensions_storage_clear command without any pre-configured scope."
+commands.deny = ["extensions_storage_clear"]

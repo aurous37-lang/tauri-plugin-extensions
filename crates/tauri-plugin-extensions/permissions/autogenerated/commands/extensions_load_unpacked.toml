@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-load-unpacked"
+description = "Enables the extensions_load_unpacked command without any pre-configured scope."
+commands.allow = ["extensions_load_unpacked"]
+
+[[permission]]
+identifier = "deny-extensions-load-unpacked"
+description = "Denies the extensions_load_unpacked command without any pre-configured scope."
+commands.deny = ["extensions_load_unpacked"]

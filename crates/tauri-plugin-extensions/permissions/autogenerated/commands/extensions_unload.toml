@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-extensions-unload"
+description = "Enables the extensions_unload command without any pre-configured scope."
+commands.allow = ["extensions_unload"]
+
+[[permission]]
+identifier = "deny-extensions-unload"
+description = "Denies the extensions_unload command without any pre-configured scope."
+commands.deny = ["extensions_unload"]

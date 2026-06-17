@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Module-Import MV3 (BG-host fixture)",
+  "version": "0.1.0",
+  "description": "Background service worker declared background.type=module with a top-level `import` of a sibling chunk. Proves the BG host loads ES-module service workers and resolves relative import specifiers against the extension root.",
+  "background": {
+    "service_worker": "sw.js",
+    "type": "module"
+  },
+  "permissions": ["storage"],
+  "host_permissions": []
+}

@@ -1,0 +1,78 @@
+[package]
+name = "tauri-plugin-extensions"
+# `links` must equal `name` for Tauri v2's plugin-development helper. The
+# build script (`tauri_plugin::Builder::new(...).build()`) inspects this
+# field to register the plugin's command surface with Tauri's capability
+# system. Unrelated to any native library linkage; it's a plugin-id handle.
+links = "tauri-plugin-extensions"
+description = "Load and run Chromium MV3 browser extensions inside a Tauri v2 webview."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords = ["tauri", "extension", "webview", "mv3", "plugin"]
+categories = ["gui", "web-programming"]
+
+[build-dependencies]
+# Tauri v2 plugin-development helper. Its `build` feature drives
+# `Builder::new(COMMANDS).build()` in build.rs, which registers this
+# plugin's command surface with Tauri's capability system. Without it,
+# consumer frontends hit "Plugin not found" at invoke time even though
+# the Rust-side commands compile and register correctly.
+tauri-plugin = { version = "2", features = ["build"] }
+
+[dependencies]
+tauri = { workspace = true }
+
+tokio = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+tracing = { workspace = true }
+thiserror = { workspace = true }
+
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
+uuid = { workspace = true }
+
+url = { workspace = true }
+regex = { workspace = true }
+percent-encoding = { workspace = true }
+
+walkdir = { workspace = true }
+
+sha2 = { workspace = true }
+base64 = { workspace = true }
+
+[dev-dependencies]
+# `test-util` enables tokio's paused test clock — tests/bg_reload_race.rs
+# drives the teardown-wait helpers with `start_paused` so the condition
+# polls run instantly instead of sleeping for real.
+tokio = { workspace = true, features = ["test-util"] }
+tempfile = { workspace = true }
+insta = { workspace = true }
+pretty_assertions = { workspace = true }
+tracing-subscriber = { workspace = true }
+# Property-based state-machine regression for the lifecycle service.
+# Sequences of { install_or_reload, reload, enable, disable, uninstall }
+# are generated and applied to the store + invariant-rule checker.
+# Doesn't link Tauri at all — stays below the Win 11 26200 DLL-load
+# threshold that blocks any integration test touching the runtime.
+proptest = "1"
+
+[features]
+default = []
+# Enables internal tracing that logs every chrome.* shim call — useful when
+# bringing up a new target extension (Phantom / MM / Rabby).
+trace-shim = []
+
+[lib]
+# MV3 extension runtime lives here. Consumers depend on this crate and call
+# `tauri_plugin_extensions::init()` from their `tauri::Builder::plugin(...)`.

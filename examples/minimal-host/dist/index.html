@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MV3 Minimal Host</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>MV3 Minimal Host</h1>
+    <p class="sub">
+      Smallest Tauri host for <code>tauri-plugin-extensions</code>.
+      Loads the <code>noop-mv3</code> fixture and exercises the plugin's
+      IPC surface.
+    </p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Fixture</h2>
+      <div class="row">
+        <label>noop-mv3 path</label>
+        <input id="fixture-path" type="text" readonly />
+        <button id="refresh-fixture-path">refresh</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Controls</h2>
+      <div class="controls">
+        <button id="ping-ipc">ping IPC</button>
+        <button id="load-noop">load noop-mv3</button>
+        <button id="list-extensions">list extensions</button>
+        <button id="ping-background" disabled>ping background</button>
+      </div>
+      <div class="row">
+        <label>loaded id</label>
+        <input id="loaded-id" type="text" readonly placeholder="(none)" />
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Loaded extensions</h2>
+      <pre id="extensions-dump">[]</pre>
+    </section>
+
+    <section class="panel">
+      <h2>Phantom phase (D-005 v1)</h2>
+      <div class="row">
+        <label>phantom fixture</label>
+        <input id="phantom-fixture-path" type="text" readonly placeholder="(not resolved)" />
+      </div>
+      <div class="row">
+        <label>loaded phantom id</label>
+        <input id="phantom-loaded-id" type="text" readonly placeholder="(none)" />
+      </div>
+      <div class="row">
+        <label>test-dapp url</label>
+        <input id="test-dapp-url" type="text" readonly placeholder="(not resolved)" />
+      </div>
+      <h3 class="sublabel">probe result</h3>
+      <pre id="phantom-probe">(pending)</pre>
+      <h3 class="sublabel">lifecycle events during phantom load</h3>
+      <pre id="phantom-lifecycle">[]</pre>
+    </section>
+
+    <section class="panel">
+      <h2>Log</h2>
+      <pre id="log"></pre>
+      <div class="controls">
+        <button id="clear-log">clear log</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
