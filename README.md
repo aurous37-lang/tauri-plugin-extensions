@@ -193,6 +193,12 @@ Licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE.md).
 This is a **source-available** license: you may use, modify, and distribute
 the software for any **noncommercial** purpose (personal projects, research,
 education, evaluation, and use by nonprofit / government organizations) free
-of charge. **Commercial use requires a separate commercial license** — contact
-the author via the [repository](https://github.com/aurous37-lang/tauri-plugin-extensions)
-to obtain one.
+of charge. **Commercial use requires a separate commercial license** — see
+[COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md) or email **aurous37@gmail.com**.
+
+## Support
+
+If this project is useful to you, donations are welcome (and help fund
+continued work) in **USDC only** to `0xd9Fe4B1f4B60E601270b802D79B090fb57930d4d`.
+Please send **USDC only** — other tokens may be unrecoverable. Donations are
+voluntary and do not grant a commercial license.

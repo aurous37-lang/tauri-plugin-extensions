@@ -21,9 +21,9 @@ license and reach out — happy to clarify before you commit to anything.
 
 Contact the author:
 
+- Email: **aurous37@gmail.com**, or
 - Open an issue or discussion on the
-  [GitHub repository](https://github.com/aurous37-lang/tauri-plugin-extensions), or
-- Email: _&lt;add a licensing contact email here&gt;_
+  [GitHub repository](https://github.com/aurous37-lang/tauri-plugin-extensions).
 
 Please include:
 
@@ -41,6 +41,24 @@ Commercial pricing is **quoted per engagement** while the project is pre-1.0
 and the supported-extension surface is still expanding. Reach out with the
 details above for a quote. Standard tiers (for example single-app, per-seat, or
 company-wide) may be published here once they stabilize.
+
+## Payments & donations
+
+Commercial-license payments and voluntary donations are accepted in **USDC
+only** to:
+
+```
+0xd9Fe4B1f4B60E601270b802D79B090fb57930d4d
+```
+
+**Important — read before sending:**
+
+- **USDC only.** Other tokens sent to this address may be unrecoverable.
+- Confirm the **network** with the author by email before sending a commercial
+  payment, so the transfer is credited correctly and not lost on an
+  unsupported chain.
+- A donation is voluntary and does **not** by itself grant a commercial
+  license — a commercial license requires the agreement described above.
 
 ## What a commercial license grants
 
