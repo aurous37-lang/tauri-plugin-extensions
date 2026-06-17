@@ -7,6 +7,11 @@ the Tauri ecosystem.
 **Status:** v1 preview. Windows only (WebView2); macOS and Linux are on the
 roadmap. Not yet published to crates.io.
 
+> **License:** Source-available under the
+> [PolyForm Noncommercial License 1.0.0](./LICENSE.md) — free for any
+> noncommercial use. **Commercial use requires a separate commercial license**
+> (see [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md)).
+
 ## Why
 
 Tauri apps cannot host browser extensions. There is no official plugin, no
